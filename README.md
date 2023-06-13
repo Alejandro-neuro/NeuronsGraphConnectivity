@@ -1,1 +1,1 @@
-Project for the course Machine Learning on Graphs
+Project for the course Machine Learning on Graphs2
