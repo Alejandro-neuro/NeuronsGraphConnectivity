@@ -8,9 +8,7 @@ train:
 dataset:
   path: MNIST
   test_size: 0.2
-  train_size: 0.8
+  train_size: 0.6
   val_size: 0.2
   num_workers: 2
-  
-
-  
+loss: MSE

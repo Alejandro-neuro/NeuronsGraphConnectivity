@@ -4,8 +4,8 @@ import torchmetrics
 import networkx as nx
 import numpy as np
 from omegaconf import OmegaConf
-import models
 import loss_func
+import optimizer_Factory
 
 
 def train_epoch(model, loader,loss_fn, optimizer, device='cpu'):
@@ -28,7 +28,7 @@ def train_epoch(model, loader,loss_fn, optimizer, device='cpu'):
     for data in loader:
 
         inputs = data
-        labels = data['y']
+        labels = data['y'].unsqueeze(1)
 
         inputs = inputs.to(device=device)
         labels = labels.to(device = device)
@@ -63,7 +63,7 @@ def evaluate_epoch(model, loader,loss_fn, device='cpu'):
 
 
             inputs = data
-            labels = data['y']
+            labels = data['y'].unsqueeze(1)
 
             inputs = inputs.to(device)
             labels = labels.to(device)
@@ -81,19 +81,17 @@ def evaluate_epoch(model, loader,loss_fn, device='cpu'):
     return loss, accuracy
 
 
-def train(model, train_loader, val_loader, optimizer, device='cpu'):
+def train(model, train_loader, val_loader, optimizer):
 
     cfg = OmegaConf.load("config.yaml")
-    cmd_cfg = OmegaConf.from_cli()
-    cfg = OmegaConf.merge(cfg, cmd_cfg)
-    print(OmegaConf.to_yaml(cfg))
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
 
-    num_epochs = 200
+    num_epochs = cfg.train.epochs
+    loss_fn = loss_func.getLoss()
+    optimizer = optimizer_Factory.getOptimizer(model)    
 
-    
 
     model.to(device)
     #create vectors for the training and validation loss
@@ -106,9 +104,9 @@ def train(model, train_loader, val_loader, optimizer, device='cpu'):
 
     for epoch in range(1, num_epochs+1):
         # Model training
-        train_loss = train_epoch(model, train_loader, optimizer, device=device)
+        train_loss = train_epoch(model, train_loader, loss_fn,optimizer, device=device)
         # Model validation
-        val_loss,accuracy = evaluate_epoch(model, val_loader, device=device)
+        val_loss,accuracy = evaluate_epoch(model, val_loader, loss_fn, device=device)
         
         train_losses.append(train_loss)
         val_losses.append(val_loss)
@@ -124,11 +122,13 @@ def train(model, train_loader, val_loader, optimizer, device='cpu'):
                 early_stop = 0
         except:
             early_stop = 0
+
         if epoch%(num_epochs /10 )== 0:
             print("epoch:",epoch, "\t training loss:", train_loss,
                   "\t validation loss:",val_loss, 
                   "\t accuracy :", accuracy )
             
+    return model, train_losses, val_losses, accuracy_list  
 
 if __name__ == '__main__':
     train()

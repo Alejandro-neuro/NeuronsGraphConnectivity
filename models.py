@@ -22,12 +22,12 @@ class Net(torch.nn.Module):
         self.convs = nn.ModuleList()
 
         
-        self.convs.append(ChebConv(1, self.hid_features, K=self.K))
-        #self.convs.append(ChebConv(self.hid_features, self.hid_features, K=self.K))
-        self.convs.append(ChebConv(self.hid_features, 1, K=self.K))
+        self.convs.append(ChebConv(self.nInputs, self.hid_features, K=self.K))
+        self.convs.append(ChebConv(self.hid_features, self.hid_features, K=self.K))
+        self.convs.append(ChebConv(self.hid_features, self.nOutputs, K=self.K))
 
-        self.lin = nn.Linear(self.num_nodes*1, self.num_communities)
-        self.initialize_weights()
+        #self.lin = nn.Linear(self.num_nodes*1, self.num_communities)
+        #self.initialize_weights()
         
     def initialize_weights(self):
         for m in self.modules():
@@ -45,12 +45,11 @@ class Net(torch.nn.Module):
         edge_attr = data.weight
         batch= data.batch
         
-        for i in range(len(self.convs)):
+        for i in range(len(self.convs) -1):
             x = self.convs[i](x=x, edge_index=edge_index, edge_weight=edge_attr)
             x = torch.relu(x)
 
         x = nn.Dropout(self.dropout_rate, inplace=False)(x)
-        x = torch.reshape(x, (x.shape[0] // self.num_nodes, self.num_nodes*1))
-        x = self.lin(x)
+        x = self.convs[-1](x=x, edge_index=edge_index, edge_weight=edge_attr)       
 
         return x

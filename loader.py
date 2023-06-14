@@ -12,25 +12,36 @@ from omegaconf import OmegaConf
 
 
 
-def gen_Dataset(G,data_original):
+def gen_Dataset(x, type, window=20, overlap=0.5):
     dataset = []
-    data1 = from_networkx(G)
+    
 
-    for x,y in zip(data_original['data'][:,:,:], data_original['labels'][:,:,:]):
+    for i in range( x.shape[1] - window-1 ):
+
+        datax = x[:,i:i+window]
+        label = x[:,i+window+1]
+
+        adj = generateAdjacencyMatrix(datax,type)
+        G = nx.DiGraph(adj)
+        data1 = from_networkx(G)  
 
         data = data1.clone()
-        data['x']=torch.from_numpy(x).float()
-        data['y']=torch.from_numpy(y).float()
+        data['x']=torch.from_numpy(datax).float()
+        data['y']=torch.from_numpy(label).float()        
         data['weight']=data['weight'].float()
+
         dataset.append(data)
+
+        i = i + int(window * overlap)
 
     return dataset
 
-def timeSeries2Dataset(timeseries):
+def timeSeries2Dataset(timeseries, type, window=20, overlap=0.5):
 
-    data, labels = timeseries[:,:-2], timeseries[:,-1]
+    data = timeseries
 
-    print(data.shape, labels.shape)
+    len_data = data.shape[1]
+
     dataset={
         "trn": {
         "data": None,
@@ -48,47 +59,49 @@ def timeSeries2Dataset(timeseries):
 
     cfg = OmegaConf.load("config.yaml")
 
+    train_size = cfg.dataset.train_size
+    val_size = cfg.dataset.val_size
     test_size = cfg.dataset.test_size
 
-    X_train, X_test, y_train, y_test  = train_test_split(data.T, labels.T, test_size=test_size, random_state=1)
+    X_train = data[:,:int(train_size*len_data)]
+    X_val = data[:,int(train_size*len_data):int((train_size+val_size)*len_data)]
+    X_test = data[:,int((train_size+val_size)*len_data):]   
 
-    print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
+    print("X_train shape: ", X_train.shape)
+    print("X_val shape: ", X_val.shape)
+    print("X_test shape: ", X_test.shape)
 
-    val_size = cfg.dataset.val_size / cfg.dataset.train_size
+    dataset['trn'] = gen_Dataset(X_train, type, window=20, overlap=0.5)
+    dataset['val'] = gen_Dataset(X_val, type, window=20, overlap=0.5)
+    dataset['tst'] = gen_Dataset(X_test, type, window=20, overlap=0.5)
     
-    X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=val_size, random_state=1) # 0.25 x 0.8 = 0.2
-
-    dataset['trn']['data'] = X_train.T
-    dataset['trn']['labels'] = y_train
-    dataset['val']['data'] = X_val.T
-    dataset['val']['labels'] = y_val
-    dataset['tst']['data'] = X_test.T
-    dataset['tst']['labels'] = y_test
-
     return dataset
 
 
 
 
-def create_partitions(G,dataset):
+def create_partitions(dataset):
     
-    train_loader = DataLoader(gen_Dataset(G,dataset['trn']), batch_size=64, shuffle=True)
-    val_loader = DataLoader(gen_Dataset(G,dataset['val']), batch_size=64, shuffle=False)
-    test_loader = DataLoader(gen_Dataset(G,dataset['tst']), batch_size=len(dataset['tst']), shuffle=False)
+    train_loader = DataLoader(dataset['trn'], batch_size=64, shuffle=True)
+    val_loader = DataLoader( dataset['val'], batch_size=64, shuffle=False)
+    test_loader = DataLoader( dataset['tst'], batch_size=64, shuffle=False)
  
     return train_loader,val_loader,test_loader
 
 #create a function that returns adjacency matrix and based on the input string "type" and returns pearson correlation
 #or mutual information
 def generateAdjacencyMatrix(x,type):
-
-    print(x.shape)
     
     if(type == 'pearson'): 
-        adj = np.corrcoef(x)
-        print(adj.shape)
-        adj = np.abs(x)
+    #calculate adjacency matrix with pearson correlation
+        adj = np.zeros((x.shape[0],x.shape[0]))
+        for i in range(x.shape[0]):
+            for j in range(x.shape[0]):
+                adj[i,j] = np.corrcoef(x[i,:],x[j,:])[0,1] #calculate pearson correlation between nodes i and j
+                adj[j,i] = adj[i,j] #make the matrix symmetric
+
         return adj
+
     
     if(type == 'mutual_info'):
         adj = np.zeros((x.shape[0],x.shape[0]))
@@ -110,26 +123,11 @@ def generateAdjacencyMatrix(x,type):
     return adj
         
 
+def generateLoaders( timeseries, type='pearson', window=20, overlap=0.5):
 
-def generateGraph(dataset,type):
+    dataset = timeSeries2Dataset(timeseries, type, window, overlap)
 
-    x = dataset['trn']['data']
-
-    adj = generateAdjacencyMatrix(x,type)    
-
-    #create a graph from the correlation matrix
-    G = nx.DiGraph(adj)
-
-    return G
-
-
-def generateLoaders( timeseries, type):
-
-    dataset = timeSeries2Dataset(timeseries)
-    
-    G = generateGraph(dataset,type)
-
-    train_loader,val_loader,test_loader = create_partitions(G,dataset)
+    train_loader,val_loader,test_loader = create_partitions(dataset)
 
     return train_loader,val_loader,test_loader
 
