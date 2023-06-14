@@ -29,23 +29,40 @@ def gen_Dataset(G,data_original):
 def timeSeries2Dataset(timeseries):
 
     data, labels = timeseries[:,:-2], timeseries[:,-1]
-    dataset=[]
+
+    print(data.shape, labels.shape)
+    dataset={
+        "trn": {
+        "data": None,
+        "labels": None
+        },
+        "val":  {
+        "data": None,
+        "labels": None
+        },
+        "tst":  {
+        "data": None,
+        "labels": None
+        }
+    }
 
     cfg = OmegaConf.load("config.yaml")
 
     test_size = cfg.dataset.test_size
 
-    X_train, X_test, y_train, y_test  = train_test_split(data, labels, test_size=test_size, random_state=1)
+    X_train, X_test, y_train, y_test  = train_test_split(data.T, labels.T, test_size=test_size, random_state=1)
+
+    print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
     val_size = cfg.dataset.val_size / cfg.dataset.train_size
     
     X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=val_size, random_state=1) # 0.25 x 0.8 = 0.2
 
-    dataset['trn']['data'] = X_train
+    dataset['trn']['data'] = X_train.T
     dataset['trn']['labels'] = y_train
-    dataset['val']['data'] = X_val
+    dataset['val']['data'] = X_val.T
     dataset['val']['labels'] = y_val
-    dataset['tst']['data'] = X_test
+    dataset['tst']['data'] = X_test.T
     dataset['tst']['labels'] = y_test
 
     return dataset
@@ -64,9 +81,12 @@ def create_partitions(G,dataset):
 #create a function that returns adjacency matrix and based on the input string "type" and returns pearson correlation
 #or mutual information
 def generateAdjacencyMatrix(x,type):
+
+    print(x.shape)
     
     if(type == 'pearson'): 
         adj = np.corrcoef(x)
+        print(adj.shape)
         adj = np.abs(x)
         return adj
     
@@ -98,12 +118,14 @@ def generateGraph(dataset,type):
     adj = generateAdjacencyMatrix(x,type)    
 
     #create a graph from the correlation matrix
-    G = nx.from_numpy_matrix(adj)
+    G = nx.DiGraph(adj)
 
     return G
 
 
-def generateLoaders( dataset, type):
+def generateLoaders( timeseries, type):
+
+    dataset = timeSeries2Dataset(timeseries)
     
     G = generateGraph(dataset,type)
 
