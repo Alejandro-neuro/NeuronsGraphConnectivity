@@ -36,10 +36,17 @@ def genSource(adj, node, listOutput):
 def postree(pos, origin,start, end):
 
     x,y = origin
+    mid = np.round((end-start)/2 )
 
     for i in range(start, end):
-        inc = 2**(i-start)
+        print(i)
+        inc = -mid + i - start
         pos[i] = (x + inc, y-2)
+
+    return pos  
+
+def genStimulus():
+    return 0
 
 def genData():  
 
@@ -60,6 +67,7 @@ def genData():
     pos[15] = (0, 0)
 
     adj = genSource(adj, 15, range(16, 20) ) 
+    pos = postree(pos, pos[15],16, 20)
 
     
 
