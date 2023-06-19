@@ -1,6 +1,9 @@
 import numpy as np
 import networkx as nx
 import math
+import matplotlib.pyplot as plt
+import custom_plots as cp
+import Visual_utils as vu
 
 def genClusterCycle(adj, start, end):
     for i in range(start, end-1):
@@ -38,20 +41,98 @@ def postree(pos, origin,start, end):
     x,y = origin
     mid = np.round((end-start)/2 )
 
+    # gerate a random intenger between 0 and 5 with seed 42
+    np.random.seed(42)
+    
+
     for i in range(start, end):
-        print(i)
-        inc = -mid + i - start
-        pos[i] = (x + inc, y-2)
+        rand = np.random.randint(0, 3)
+        inc = -mid + i - start+2
+        pos[i] = (x + 1*inc, y-(5+rand))
 
     return pos  
 
-def genStimulus():
-    return 0
+def posVerticaltree(pos, origin,start, end, dir = 1):
+
+    x,y = origin
+    mid = np.round((end-start)/2 )
+
+    # gerate a random intenger between 0 and 5 with seed 42
+    np.random.seed(42)    
+
+    for i in range(start, end):
+        rand = np.random.randint(0, 3)
+        inc = -mid + i - start+2
+        pos[i] = (x +  dir*(5+rand) , y + 2*dir*inc )
+
+    return pos  
+
+
+def genStimulus(A, x0, num_samples):
+
+    nconn= np.sum(A, axis=0)
+    nconn[nconn==0] = 1
+    samples= num_samples
+    timeseries = np.zeros((A.shape[0],samples*2), dtype=float)
+    timeseries[:,0] = x0    
+    x_inter = np.zeros_like(x0)
+    for i in range(1,2*samples-1,2):
+
+        x1 = A.T@x0
+        
+        x_prop_inter = A.T@x_inter
+
+        x_prop_inter = x_prop_inter/nconn   
+
+        x1 = x1/nconn
+
+        #x1[x1 + x_prop_inter <=0.5] = 0
+
+        x_inter = np.zeros_like(x1)
+        x_inter[x0==1] = 0.5
+        x_inter[x1==1] = 0.5
+        #x1[x0==1] = 0.5
+        
+        timeseries[:,i] = x_inter
+
+        timeseries[:,i+1] = x1
+
+        #i = i+2
+
+        x0 = x1
+    
+    return timeseries
+
+def DrawGraph( G,pos = None, styleDark = False ):
+    
+    plt.figure()
+    fig, axarr = plt.subplots(figsize=(20, 10), dpi= 80)
+
+   
+    if(styleDark):
+        node_color = 'skyblue'
+        edge_color='white'
+    else:
+        node_color = 'skyblue'
+        edge_color='black'
+    
+
+    # create graph from adjacency matrix  
+    if pos is None:
+        pos = nx.spring_layout(G) # positions for all nodes
+        #pos = nx.spectral_layout(G)
+    nx.draw(G, pos, with_labels=True, node_color=node_color, node_size=1200, edge_color=edge_color) # draw graph
+    
+    if(styleDark):
+        plt.style.use('dark_background')
+        fig.set_facecolor("#00000F")
+    else:
+        plt.style.use('default')
 
 def genData():  
 
-    num_nodes = 20 # number of nodes    0
-    num_samples = 1000 # number of samples   
+    num_nodes = 50 # number of nodes    0
+    num_samples = 10 # number of samples   
 
     pos = {i: (0, 0) for i in range(num_nodes)} # node positions (x,y)  
 
@@ -69,10 +150,32 @@ def genData():
     adj = genSource(adj, 15, range(16, 20) ) 
     pos = postree(pos, pos[15],16, 20)
 
+    adj = genSink(adj, 20, [8,9]) 
+    pos[20] = (11, 0)
+
+    adj = genSource(adj, 20, range(21, 30) ) 
+    pos = postree(pos, pos[20],21, 30)
+
+    adj = genSource(adj, 9, range(30, 40) ) 
+    pos = posVerticaltree(pos, pos[9],30, 40,  dir = 1)
+
+    adj = genSource(adj, 12, range(40, 50) ) 
+    pos = posVerticaltree(pos, pos[12],40, 50, dir = -1)
+
     
 
-    G = nx.DiGraph(adj) # create graph from adjacency matrix  
-    #pos = nx.spectral_layout(G)
-    nx.draw(G, pos, with_labels=True) # draw graph
+    G = nx.DiGraph(adj) 
+
+    #DrawGraph( G,pos = pos, styleDark = True )
+
+    x0 = np.zeros(num_nodes, dtype=float)
+    x0[11] = 1
+    x0[6] = 1
+    timeseries = genStimulus(adj, x0,num_samples)
+    print(timeseries)
+    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
+
+    vu.createImage(pos,x0)
+    
 
 

@@ -15,7 +15,7 @@ def plotMultiple( X,  xlabel, ylabel,title, name, styleDark = False ):
         plt.style.use('default')
 
     fig, axarr = plt.subplots(figsize=(20, 10), dpi= 80)
-    plt.title(f'Performance',size=40)
+    plt.title(title,size=40)
     plt.xlabel(xlabel,size=30)
     plt.ylabel(ylabel,size=30)
     plt.rc('xtick', labelsize=20)
@@ -44,3 +44,30 @@ def plotMultiple( X,  xlabel, ylabel,title, name, styleDark = False ):
     plt.savefig(f'./plots/{name}.png')
     
     plt.show()
+
+def plotMatrix(M,xlabel, ylabel,title, name, styleDark = False):
+
+    plt.figure()
+    if(styleDark):
+        plt.style.use('dark_background')
+    else:
+        plt.style.use('default')
+
+    fig, axarr = plt.subplots(figsize=(20, 10), dpi= 80)
+    plt.title(title,size=40)
+    plt.xlabel(xlabel,size=30)
+    plt.ylabel(ylabel,size=30)
+    plt.rc('xtick', labelsize=20)
+    plt.rc('ytick', labelsize=20)
+    plt.rc('font', family='serif')
+
+    cmap = plt.cm.get_cmap('Greys_r', 256)
+
+    plt.imshow(M, cmap=cmap, interpolation='nearest')
+    plt.colorbar()
+
+    
+    plt.savefig(f'./plots/{name}.png')
+    
+    plt.show()
+    
