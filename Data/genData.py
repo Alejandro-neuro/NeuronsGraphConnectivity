@@ -86,8 +86,10 @@ def genStimulus(A, x0, num_samples):
 
         x1 = x1/nconn
 
-        #x1[x1 + x_prop_inter <=0.5] = 0
+        indexmulti = np.where(  np.logical_and( x1+x_prop_inter>0.6 , x1+x_prop_inter<1) )
 
+        #x1[np.where(x1 >0.2 and x1<1 and x_prop_inter>0 and x1+x_prop_inter>0.6) ] = 1
+        x1[indexmulti] = 1  
         x_inter = np.zeros_like(x1)
         x_inter[x0==1] = 0.5
         x_inter[x1==1] = 0.5
@@ -132,7 +134,7 @@ def DrawGraph( G,pos = None, styleDark = False ):
 def genData():  
 
     num_nodes = 50 # number of nodes    0
-    num_samples = 10 # number of samples   
+    num_samples = 200 # number of samples   
 
     pos = {i: (0, 0) for i in range(num_nodes)} # node positions (x,y)  
 
@@ -156,8 +158,8 @@ def genData():
     adj = genSource(adj, 20, range(21, 30) ) 
     pos = postree(pos, pos[20],21, 30)
 
-    adj = genSource(adj, 9, range(30, 40) ) 
-    pos = posVerticaltree(pos, pos[9],30, 40,  dir = 1)
+    adj = genSource(adj, 1, range(30, 40) ) 
+    pos = posVerticaltree(pos, pos[1],30, 40,  dir = 1)
 
     adj = genSource(adj, 12, range(40, 50) ) 
     pos = posVerticaltree(pos, pos[12],40, 50, dir = -1)
@@ -166,16 +168,24 @@ def genData():
 
     G = nx.DiGraph(adj) 
 
-    #DrawGraph( G,pos = pos, styleDark = True )
+    DrawGraph( G,pos = pos, styleDark = True )
 
     x0 = np.zeros(num_nodes, dtype=float)
-    x0[11] = 1
+    x0[12] = 1
     x0[6] = 1
     timeseries = genStimulus(adj, x0,num_samples)
-    print(timeseries)
+    x0 = np.zeros(num_nodes, dtype=float)
+    x0[4] = 1
+    x0[7] = 1
+    timeseries=np.concatenate((timeseries,genStimulus(adj, x0,num_samples)) , axis=1)
+    x0 = np.zeros(num_nodes, dtype=float)
+    x0[11] = 1
+    x0[8] = 1
+    timeseries=np.concatenate((timeseries, genStimulus(adj, x0,num_samples)) , axis=1)
+    #print(timeseries)
     cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
 
-    vu.createImage(pos,x0)
+    #vu.createImage(pos,x0)
     
 
 

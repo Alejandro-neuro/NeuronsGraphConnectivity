@@ -24,21 +24,20 @@ def plotMultiple( X,  xlabel, ylabel,title, name, styleDark = False ):
 
     #create a funtion that iterates over the list of lists and plots each one
     for i,row in enumerate(X):
-        x = row.x
-        y = row.y
+        x = row['x']
+        y = row['y']
         try:
-            color = row.color
+            color = row['color']
         except:
             if(styleDark):
                 color = colors_dark[i]
             else:
-                color = color[i]
+                color = colors[i]
 
 
     
 
-        plt.plot(x, color=color, linewidth =3, label=f'{row.label}' )
-        plt.plot(y, color=color, linewidth =3, label=f'{row.label}' )
+        plt.plot(x,y, color=color, linewidth =3, label=f'{row["label"]}' )
     
     plt.legend(fontsize="20", loc ="upper left")
     plt.savefig(f'./plots/{name}.png')
@@ -53,7 +52,7 @@ def plotMatrix(M,xlabel, ylabel,title, name, styleDark = False):
     else:
         plt.style.use('default')
 
-    fig, axarr = plt.subplots(figsize=(20, 10), dpi= 80)
+    fig, axarr = plt.subplots(figsize=(40, 10), dpi= 80)
     plt.title(title,size=40)
     plt.xlabel(xlabel,size=30)
     plt.ylabel(ylabel,size=30)

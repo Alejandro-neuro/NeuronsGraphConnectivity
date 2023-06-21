@@ -6,6 +6,7 @@ import numpy as np
 from omegaconf import OmegaConf
 import loss_func
 import optimizer_Factory
+import custom_plots as cp
 
 
 def train_epoch(model, loader,loss_fn, optimizer, device='cpu'):
@@ -81,7 +82,7 @@ def evaluate_epoch(model, loader,loss_fn, device='cpu'):
     return loss, accuracy
 
 
-def train(model, train_loader, val_loader, optimizer):
+def train(model, train_loader, val_loader, name):
 
     cfg = OmegaConf.load("config.yaml")
 
@@ -100,7 +101,6 @@ def train(model, train_loader, val_loader, optimizer):
     val_losses = []
     accuracy_list = []
     patience = 15 # patience for early stopping
-    print(device)
 
     for epoch in range(1, num_epochs+1):
         # Model training
@@ -128,6 +128,10 @@ def train(model, train_loader, val_loader, optimizer):
                   "\t validation loss:",val_loss, 
                   "\t accuracy :", accuracy )
             
+    X = []
+    X.append( { 'x': range(1, num_epochs+1), 'y': train_losses, 'label': 'train_loss'} )
+    X.append({'x': range(1, num_epochs+1), 'y': val_losses, 'label': 'val_loss'} )
+    cp.plotMultiple( X,  'epoch', 'Loss','Performance', name, styleDark = True )
     return model, train_losses, val_losses, accuracy_list  
 
 if __name__ == '__main__':
