@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch_geometric.nn import ChebConv,GCNConv
+from torch_geometric.nn import ChebConv,GCNConv, GATConv, GATv2Conv
 
 
 class GNN(torch.nn.Module):
@@ -55,16 +55,9 @@ class GNN(torch.nn.Module):
         return x
     
 class MLPGNN(torch.nn.Module):
-    """
-    Graph neural network (GNN) model for community detection.
-
-    Args:
-    num_communities (int): Number of communities in the graph.
-    num_nodes (int): Number of nodes in the graph.
-    hid_features (int): Number of hidden features in the GNN layers.
-    """
+   
     def __init__(self, nInputs, nOutputs, hid_features=32):
-        super(GNN, self).__init__() #Net, self
+        super(MLPGNN, self).__init__() #Net, self
         self.hid_features = hid_features
         self.nInputs = nInputs
         self.nOutputs = nOutputs
@@ -104,3 +97,42 @@ class MLPGNN(torch.nn.Module):
         x = self.convs[-1](x=x, edge_index=edge_index, edge_weight=edge_attr)       
 
         return x
+    
+class GATGCN(torch.nn.Module):
+
+      def __init__(self, nInputs, nOutputs, hid_features=32):
+        super(GATGCN, self).__init__() 
+
+        self.nInputs = nInputs
+        self.nOutputs = nOutputs
+        self.dropout_rate=0.0
+        self.K = 1
+        self.convs = nn.ModuleList()
+
+        self.GAT = GATConv(self.nInputs, self.nInputs)
+
+        self.convs.append(ChebConv(self.nInputs, self.hid_features, K=self.K))
+        self.convs.append(ChebConv(self.hid_features, self.hid_features, K=self.K))
+        self.convs.append(ChebConv(self.hid_features, self.nOutputs, K=self.K))
+
+      def forward(self, data):
+    
+        x = data.x
+        edge_index = data.edge_index
+        edge_attr = data.weight
+        batch= data.batch
+
+        x, ed, we  = self.GATv2Conv(x=x, edge_index=edge_index, edge_weight=edge_attr, return_attention_weights=True) 
+        
+        for i in range(len(self.convs) -1):
+            x = self.convs[i](x=x, edge_index=ed, edge_weight=we)
+            x = torch.relu(x)
+
+        x = nn.Dropout(self.dropout_rate, inplace=False)(x)
+        x = self.convs[-1](x=x, edge_index=edge_index, edge_weight=edge_attr)
+    
+        
+    
+        
+
+          

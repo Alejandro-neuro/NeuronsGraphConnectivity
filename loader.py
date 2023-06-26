@@ -119,8 +119,12 @@ def generateAdjacencyMatrix(x,type):
                 adj[i,j] = np.dot(x[i,:],x[j,:]) / (np.linalg.norm(x[i,:]) * np.linalg.norm(x[j,:]))
                 adj[j,i] = adj[i,j] #make the matrix symmetric
         return adj   
-
-    return adj
+    
+    if(type == 'fully_connected'):
+        adj = np.ones((x.shape[0],x.shape[0]))
+        adj = adj - np.eye(x.shape[0])
+        
+        return adj
         
 
 def generateLoaders( timeseries, type='pearson', window=20, overlap=0.5):
