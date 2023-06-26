@@ -1,5 +1,6 @@
 # Plot the training and validation losses.
 import matplotlib.pyplot as plt
+from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
 
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#FFA500', '#800080', '#008080']
 
@@ -52,7 +53,7 @@ def plotMatrix(M,xlabel, ylabel,title, name, styleDark = False):
     else:
         plt.style.use('default')
 
-    fig, axarr = plt.subplots(figsize=(40, 10), dpi= 80)
+    fig, axarr = plt.subplots(figsize=(80, 10), dpi= 300)
     plt.title(title,size=40)
     plt.xlabel(xlabel,size=30)
     plt.ylabel(ylabel,size=30)
@@ -62,11 +63,40 @@ def plotMatrix(M,xlabel, ylabel,title, name, styleDark = False):
 
     cmap = plt.cm.get_cmap('Greys_r', 256)
 
-    plt.imshow(M, cmap=cmap, interpolation='nearest')
-    plt.colorbar()
+    axarr.set_xlim(0, M.shape[1])
+    axarr.set_ylim(0, M.shape[0])
+    
+    
+    img = axarr.imshow(M, cmap=cmap, interpolation='nearest')
+    axarr.grid(which='major', color='purple', linestyle='-', linewidth=4)
+    axarr.grid(which='minor', color='w', linestyle=':', linewidth=2)
+    #axarr.grid(which='minor', color='purple', linestyle='-', linewidth=2)
+
+    # Change major ticks to show every 20.
+    axarr.xaxis.set_major_locator(MultipleLocator(10))
+    axarr.yaxis.set_major_locator(MultipleLocator(10))
+
+    # Change minor ticks to show every 5. (20/4 = 5)
+    axarr.xaxis.set_minor_locator(AutoMinorLocator(4))
+    axarr.yaxis.set_minor_locator(AutoMinorLocator(4))
+
+    # Or if you want different settings for the grids:
+    axarr.grid(which='minor', alpha=0.5)
+    axarr.grid(which='major', alpha=0.8)
+
+    axarr.set_xticklabels(axarr.get_xticks(), rotation = 45)
+
+
+    cbar = plt.colorbar(img, ax=axarr, aspect=30)
+
+    # Position the colorbar to the right of the plot
+    #cbar.ax.yaxis.tick_right()
+    cbar.ax.set_ylabel('Normalized voltage')
 
     
     plt.savefig(f'./plots/{name}.png')
+
+    
     
     plt.show()
     

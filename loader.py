@@ -71,9 +71,9 @@ def timeSeries2Dataset(timeseries, type, window=20, overlap=0.5):
     print("X_val shape: ", X_val.shape)
     print("X_test shape: ", X_test.shape)
 
-    dataset['trn'] = gen_Dataset(X_train, type, window=20, overlap=0.5)
-    dataset['val'] = gen_Dataset(X_val, type, window=20, overlap=0.5)
-    dataset['tst'] = gen_Dataset(X_test, type, window=20, overlap=0.5)
+    dataset['trn'] = gen_Dataset(X_train, type, window=window, overlap=0.5)
+    dataset['val'] = gen_Dataset(X_val, type, window=window, overlap=0.5)
+    dataset['tst'] = gen_Dataset(X_test, type, window=window, overlap=0.5)
     
     return dataset
 

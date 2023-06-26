@@ -4,6 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import custom_plots as cp
 import Visual_utils as vu
+import pandas as pd
 
 def genClusterCycle(adj, start, end):
     for i in range(start, end-1):
@@ -86,10 +87,13 @@ def genStimulus(A, x0, num_samples):
 
         x1 = x1/nconn
 
-        indexmulti = np.where(  np.logical_and( x1+x_prop_inter>0.6 , x1+x_prop_inter<1) )
+        
 
-        #x1[np.where(x1 >0.2 and x1<1 and x_prop_inter>0 and x1+x_prop_inter>0.6) ] = 1
+        indexmulti = np.where(  np.logical_and( x1+x_prop_inter>0.6 , x1+x_prop_inter<1) )
         x1[indexmulti] = 1  
+
+        x1[x1<1] = 0
+        
         x_inter = np.zeros_like(x1)
         x_inter[x0==1] = 0.5
         x_inter[x1==1] = 0.5
@@ -98,6 +102,37 @@ def genStimulus(A, x0, num_samples):
         timeseries[:,i] = x_inter
 
         timeseries[:,i+1] = x1
+
+        #i = i+2
+
+        x0 = x1
+    
+    return timeseries
+
+def genStimulus2(A, x0, num_samples):
+
+    nconn= np.sum(A, axis=0)
+    nconn[nconn==0] = 1
+    samples= num_samples
+    timeseries = np.zeros((A.shape[0],samples), dtype=float)
+    timeseries[:,0] = x0    
+    x_inter = np.zeros_like(x0)
+    for i in range(1,samples,1):
+
+        x1 = A.T@x0
+        
+ 
+
+        x1 = x1/nconn
+
+
+        x1[x1<0.7] = 0
+        x1[x1>=0.7] = 1
+        
+        
+        x1[x0==1] = 0.5
+        
+        timeseries[:,i] = x1
 
         #i = i+2
 
@@ -134,7 +169,7 @@ def DrawGraph( G,pos = None, styleDark = False ):
 def genData():  
 
     num_nodes = 50 # number of nodes    0
-    num_samples = 200 # number of samples   
+    num_samples = 100 # number of samples   
 
     pos = {i: (0, 0) for i in range(num_nodes)} # node positions (x,y)  
 
@@ -152,7 +187,7 @@ def genData():
     adj = genSource(adj, 15, range(16, 20) ) 
     pos = postree(pos, pos[15],16, 20)
 
-    adj = genSink(adj, 20, [8,9]) 
+    adj = genSink(adj, 20, [8,30]) 
     pos[20] = (11, 0)
 
     adj = genSource(adj, 20, range(21, 30) ) 
@@ -171,20 +206,35 @@ def genData():
     DrawGraph( G,pos = pos, styleDark = True )
 
     x0 = np.zeros(num_nodes, dtype=float)
+    x0[10] = 1
     x0[12] = 1
     x0[6] = 1
-    timeseries = genStimulus(adj, x0,num_samples)
+    timeseries = genStimulus2(adj, x0,num_samples)
     x0 = np.zeros(num_nodes, dtype=float)
     x0[4] = 1
     x0[7] = 1
-    timeseries=np.concatenate((timeseries,genStimulus(adj, x0,num_samples)) , axis=1)
+    timeseries=np.concatenate((timeseries,genStimulus2(adj, x0,num_samples)) , axis=1)
     x0 = np.zeros(num_nodes, dtype=float)
-    x0[11] = 1
-    x0[8] = 1
-    timeseries=np.concatenate((timeseries, genStimulus(adj, x0,num_samples)) , axis=1)
-    #print(timeseries)
-    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
+    x0[10] = 1
+    timeseries=np.concatenate((timeseries, genStimulus2(adj, x0,num_samples)) , axis=1)
 
+    x0 = np.zeros(num_nodes, dtype=float)
+    x0[7] = 1
+    x0[0] = 1
+    timeseries=np.concatenate((timeseries, genStimulus2(adj, x0,num_samples)) , axis=1)
+    df = pd.DataFrame(timeseries, index = ['Node'+str(i) for i in range(num_nodes)])
+    x0 = np.zeros(num_nodes, dtype=float)
+    x0[7] = 1
+    x0[13] = 1
+    x0[0] = 1
+    timeseries=np.concatenate((timeseries, genStimulus2(adj, x0,num_samples)) , axis=1)
+    df = pd.DataFrame(timeseries, index = ['Node'+str(i) for i in range(num_nodes)])
+    
+    
+    
+    print(df)
+    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
+    return timeseries, adj, pos
     #vu.createImage(pos,x0)
     
 
