@@ -105,31 +105,45 @@ class GATGCN(torch.nn.Module):
 
         self.nInputs = nInputs
         self.nOutputs = nOutputs
+        self.hid_features = hid_features
         self.dropout_rate=0.0
         self.K = 1
         self.convs = nn.ModuleList()
 
-        self.GAT = GATConv(self.nInputs, self.nInputs)
+        self.edgeRep = None
+
+        self.GAT = GATv2Conv(self.nInputs, self.nInputs)
 
         self.convs.append(ChebConv(self.nInputs, self.hid_features, K=self.K))
         self.convs.append(ChebConv(self.hid_features, self.hid_features, K=self.K))
         self.convs.append(ChebConv(self.hid_features, self.nOutputs, K=self.K))
-
+      def get_weights(self):
+        return self.GAT.get_weights()
+          
       def forward(self, data):
     
         x = data.x
         edge_index = data.edge_index
         edge_attr = data.weight
         batch= data.batch
+        print(x.shape)
+        print(edge_index.shape)
+        x, ed  = self.GAT(x=x, edge_index=edge_index, return_attention_weights=True) 
 
-        x, ed, we  = self.GATv2Conv(x=x, edge_index=edge_index, edge_weight=edge_attr, return_attention_weights=True) 
+        print(x.shape)
+        print(ed[0].shape)
+        print(ed[1].shape)
         
         for i in range(len(self.convs) -1):
-            x = self.convs[i](x=x, edge_index=ed, edge_weight=we)
+            x = self.convs[i](x=x, edge_index=ed[0])
             x = torch.relu(x)
 
         x = nn.Dropout(self.dropout_rate, inplace=False)(x)
-        x = self.convs[-1](x=x, edge_index=edge_index, edge_weight=edge_attr)
+        x = self.convs[-1](x=x, edge_index=ed[0])
+
+        self.edgeRep = ed[0]
+
+        return x
     
         
     
