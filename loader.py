@@ -14,7 +14,7 @@ import pyinform as pi
 
 
 
-def gen_Dataset(x, type, window=20, overlap=0.5):
+def gen_Dataset(x, type, threshold=0, window=20, overlap=0.5):
     dataset = []
     
 
@@ -23,7 +23,7 @@ def gen_Dataset(x, type, window=20, overlap=0.5):
         datax = x[:,i:i+window]
         label = x[:,i+window+1]
 
-        adj = generateAdjacencyMatrix(datax,type)
+        adj = generateAdjacencyMatrix(datax,type, threshold=threshold)
         G = nx.DiGraph(adj)
         data1 = from_networkx(G)  
 
@@ -38,7 +38,7 @@ def gen_Dataset(x, type, window=20, overlap=0.5):
 
     return dataset
 
-def timeSeries2Dataset(timeseries, type, window=20, overlap=0.5):
+def timeSeries2Dataset(timeseries, type, threshold = 0, window=20, overlap=0.5):
 
     data = timeseries
 
@@ -73,9 +73,9 @@ def timeSeries2Dataset(timeseries, type, window=20, overlap=0.5):
     print("X_val shape: ", X_val.shape)
     print("X_test shape: ", X_test.shape)
 
-    dataset['trn'] = gen_Dataset(X_train, type, window=window, overlap=0.5)
-    dataset['val'] = gen_Dataset(X_val, type, window=window, overlap=0.5)
-    dataset['tst'] = gen_Dataset(X_test, type, window=window, overlap=0.5)
+    dataset['trn'] = gen_Dataset(X_train, type, threshold=threshold, window=window, overlap=0.5)
+    dataset['val'] = gen_Dataset(X_val, type, threshold=threshold, window=window, overlap=0.5)
+    dataset['tst'] = gen_Dataset(X_test, type, threshold=threshold, window=window, overlap=0.5)
     
     return dataset
 
@@ -92,7 +92,7 @@ def create_partitions(dataset):
 
 #create a function that returns adjacency matrix and based on the input string "type" and returns pearson correlation
 #or mutual information
-def generateAdjacencyMatrix(x,type):
+def generateAdjacencyMatrix(x,type, threshold=0):
     
     if(type == 'pearson'): 
     #calculate adjacency matrix with pearson correlation
@@ -110,6 +110,8 @@ def generateAdjacencyMatrix(x,type):
         for i in range(x.shape[0]):
             for j in range(x.shape[0]):
                 adj[i,j] = np.correlate(x[i,:],x[j,:])  
+        #adj = np.fill_diagonal(adj, 0)
+        adj[adj < threshold] = 0    
         return adj
             
     #calculate adjacency matrix with transfer entropy
@@ -145,9 +147,9 @@ def generateAdjacencyMatrix(x,type):
         return adj
         
 
-def generateLoaders( timeseries, type='pearson', window=20, overlap=0.5):
+def generateLoaders( timeseries, type='pearson', threshold=0, window=20, overlap=0.5):
 
-    dataset = timeSeries2Dataset(timeseries, type, window, overlap)
+    dataset = timeSeries2Dataset(timeseries, type, threshold=threshold, window = window, overlap = overlap)
 
     train_loader,val_loader,test_loader = create_partitions(dataset)
 
