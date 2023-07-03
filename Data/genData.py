@@ -230,9 +230,7 @@ def genData():
     timeseries=np.concatenate((timeseries, genStimulus2(adj, x0,num_samples)) , axis=1)
     df = pd.DataFrame(timeseries, index = ['Node'+str(i) for i in range(num_nodes)])
     
-    
-    
-    print(df)
+    #print(df)
     cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
     return timeseries, adj, pos
     #vu.createImage(pos,x0)

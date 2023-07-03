@@ -84,7 +84,8 @@ def plotMatrix(M,xlabel, ylabel,title, name, styleDark = False):
     axarr.grid(which='minor', alpha=0.5)
     axarr.grid(which='major', alpha=0.8)
 
-    axarr.set_xticklabels(axarr.get_xticks(), rotation = 45)
+    #axarr.set_xticklabels(axarr.get_xticks(), rotation = 45)
+    axarr.tick_params(axis='x', labelrotation = 45)
 
 
     cbar = plt.colorbar(img, ax=axarr, aspect=30)

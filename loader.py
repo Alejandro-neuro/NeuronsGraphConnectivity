@@ -10,6 +10,8 @@ from sklearn.metrics import mutual_info_score
 
 from omegaconf import OmegaConf
 
+import pyinform as pi
+
 
 
 def gen_Dataset(x, type, window=20, overlap=0.5):
@@ -101,7 +103,23 @@ def generateAdjacencyMatrix(x,type):
                 adj[j,i] = adj[i,j] #make the matrix symmetric
 
         return adj
-
+    
+    #calculate adjacency matrix with cross correlation
+    if(type == 'cross_correlation'):
+        adj = np.zeros((x.shape[0],x.shape[0]))
+        for i in range(x.shape[0]):
+            for j in range(x.shape[0]):
+                adj[i,j] = np.correlate(x[i,:],x[j,:])  
+        return adj
+            
+    #calculate adjacency matrix with transfer entropy
+    if(type == 'transfer_entropy'):
+        adj = np.zeros((x.shape[0],x.shape[0]))
+        for i in range(x.shape[0]):
+            for j in range(x.shape[0]):
+                adj[i,j] = pi.transfer_entropy(x[i,:],x[j,:], k=1)
+        return adj
+        
     
     if(type == 'mutual_info'):
         adj = np.zeros((x.shape[0],x.shape[0]))
