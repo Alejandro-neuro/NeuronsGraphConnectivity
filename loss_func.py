@@ -2,9 +2,16 @@ import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
 
-def custom_loss(outputs, labels):
-    loss = nn.MSELoss()
-    return loss(outputs, labels)   
+def custom_loss(outputs, labels, inputs):
+    loss = 0
+
+    loss_fn = nn.MSELoss()
+
+    for i in range(len(outputs)): 
+        if  inputs[i].sum() != labels[i]:
+            loss += loss_fn(outputs[i], labels[i])
+
+    return loss
 
 def getLoss():
     cfg = OmegaConf.load("config.yaml")

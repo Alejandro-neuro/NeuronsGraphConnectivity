@@ -40,7 +40,7 @@ def train_epoch(model, loader,loss_fn, optimizer, device='cpu'):
 
 
         # Compute the loss and its gradients
-        loss = loss_fn(outputs, labels)
+        loss = loss_fn(outputs, labels, data.x)
         loss.backward()
         optimizer.step()
 
@@ -72,7 +72,7 @@ def evaluate_epoch(model, loader,loss_fn, device='cpu'):
             # Make predictions for this batch
             outputs = model(inputs)
 
-            running_loss += loss_fn(outputs, labels).item()
+            running_loss += loss_fn(outputs, labels, data.x).item()
 
             pred = outputs.argmax(dim=1)
             correct += (pred == labels.argmax(dim=-1) ).sum().float() / pred.shape[0] # Check against ground-truth labels.
@@ -103,6 +103,10 @@ def train(model, train_loader, val_loader, name):
     patience = 15 # patience for early stopping
 
     for epoch in range(1, num_epochs+1):
+
+        if hasattr(model, 'reset_adjMat'):
+            model.reset_adjMat()
+            
         # Model training
         train_loss = train_epoch(model, train_loader, loss_fn,optimizer, device=device)
         # Model validation
