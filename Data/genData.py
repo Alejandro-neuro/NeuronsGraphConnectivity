@@ -143,23 +143,26 @@ def genStimulus2(A, x0, num_samples):
 def DrawGraph( G,pos = None, styleDark = False ):
     
     plt.figure()
-    fig, axarr = plt.subplots(figsize=(20, 10), dpi= 80)
+    fig, axarr = plt.subplots(figsize=(20, 10), dpi= 300)
 
    
     if(styleDark):
         node_color = 'skyblue'
-        edge_color='white'
+        edge_color1='lightpink'
+        text_color = 'white'
     else:
         node_color = 'skyblue'
-        edge_color='black'
-    
+        edge_color1='cyan'
+        text_color = 'black'
 
     # create graph from adjacency matrix  
     if pos is None:
         pos = nx.spring_layout(G) # positions for all nodes
         #pos = nx.spectral_layout(G)
-    nx.draw(G, pos, with_labels=True, node_color=node_color, node_size=1200, edge_color=edge_color) # draw graph
+    nx.draw_networkx_edges(G, pos, edge_color=edge_color1, alpha=1.0, width=2.0,connectionstyle="arc3,rad=0.1", ax=axarr)
+    nx.draw_networkx_labels(G, pos, font_size=15, font_color= text_color, font_family='Georgia', font_weight='normal', alpha=None, bbox=None, horizontalalignment='center', verticalalignment='center', ax=axarr)
     
+
     if(styleDark):
         plt.style.use('dark_background')
         fig.set_facecolor("#00000F")
@@ -203,7 +206,7 @@ def genData():
 
     G = nx.DiGraph(adj) 
 
-    DrawGraph( G,pos = pos, styleDark = True )
+    DrawGraph( G,pos = pos, styleDark = False )
 
     x0 = np.zeros(num_nodes, dtype=float)
     x0[10] = 1
@@ -231,7 +234,7 @@ def genData():
     df = pd.DataFrame(timeseries, index = ['Node'+str(i) for i in range(num_nodes)])
     
     #print(df)
-    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
+    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = False)
     return timeseries, adj, pos
     #vu.createImage(pos,x0)
     

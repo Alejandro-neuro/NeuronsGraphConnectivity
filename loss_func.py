@@ -2,16 +2,29 @@ import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
 
-def custom_loss(outputs, labels, inputs):
+def custom_loss(outputs, labels, inputs, model):
     loss = 0
 
     loss_fn = nn.MSELoss()
 
+    regularizer = 0
+
+    if model.__class__.__name__ == "GATCustom":
+        param = model.adjMat
+        regularizer = torch.norm(param, p=1)
+
+    if model.__class__.__name__ == "GCNlearnable":
+        param = model.adjTrue
+        regularizer = torch.norm(param, p=1)
+
+    count = 0 
+
     for i in range(len(outputs)): 
         if  inputs[i].sum() != labels[i]:
             loss += loss_fn(outputs[i], labels[i])
+            count += 1
 
-    return loss
+    return loss / count # + 0.01 * regularizer
 
 def getLoss():
     cfg = OmegaConf.load("config.yaml")

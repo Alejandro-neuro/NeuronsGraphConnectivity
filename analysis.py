@@ -30,7 +30,7 @@ def compare_Graphs(adj1, adj2, threshold=0, pos=None):
           "Number of edges in predicted graph: ", len(predicted_graph.edges())
           )
     
-    Draw2Graph(real_graph, predicted_graph, pos, styleDark = True ) 
+    Draw2Graph(real_graph, predicted_graph, pos, styleDark = False ) 
     
     
 def Draw2Graph( G1,G2,pos = None, styleDark = False ):
@@ -46,7 +46,7 @@ def Draw2Graph( G1,G2,pos = None, styleDark = False ):
         text_color = 'white'
     else:
         node_color = 'skyblue'
-        edge_color1='lightpink'
+        edge_color1='cyan'
         edge_color2='black'
         text_color = 'black'
     
@@ -75,3 +75,4 @@ def Draw2Graph( G1,G2,pos = None, styleDark = False ):
         fig.set_facecolor("#00000F")
     else:
         plt.style.use('default') 
+        fig.set_facecolor("#FFFFFF")

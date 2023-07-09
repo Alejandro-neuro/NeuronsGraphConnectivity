@@ -40,7 +40,7 @@ def train_epoch(model, loader,loss_fn, optimizer, device='cpu'):
 
 
         # Compute the loss and its gradients
-        loss = loss_fn(outputs, labels, data.x)
+        loss = loss_fn(outputs, labels, data.x, model)
         loss.backward()
         optimizer.step()
 
@@ -59,6 +59,8 @@ def evaluate_epoch(model, loader,loss_fn, device='cpu'):
         accuracy=0.
         correct = 0.
 
+        va_loss_fn = nn.MSELoss()
+
 
         for data in loader:
 
@@ -72,7 +74,7 @@ def evaluate_epoch(model, loader,loss_fn, device='cpu'):
             # Make predictions for this batch
             outputs = model(inputs)
 
-            running_loss += loss_fn(outputs, labels, data.x).item()
+            running_loss += va_loss_fn(outputs, labels).item()
 
             pred = outputs.argmax(dim=1)
             correct += (pred == labels.argmax(dim=-1) ).sum().float() / pred.shape[0] # Check against ground-truth labels.
@@ -135,7 +137,7 @@ def train(model, train_loader, val_loader, name):
     X = []
     X.append( { 'x': range(1, num_epochs+1), 'y': train_losses, 'label': 'train_loss'} )
     X.append({'x': range(1, num_epochs+1), 'y': val_losses, 'label': 'val_loss'} )
-    cp.plotMultiple( X,  'epoch', 'Loss','Performance', name, styleDark = True )
+    cp.plotMultiple( X,  'epoch', 'Loss','Performance', name, styleDark = False )
     return model, train_losses, val_losses, accuracy_list  
 
 if __name__ == '__main__':

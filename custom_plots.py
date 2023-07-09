@@ -51,7 +51,7 @@ def plotMatrix(M,xlabel, ylabel,title, name, styleDark = False):
     if(styleDark):
         plt.style.use('dark_background')
     else:
-        plt.style.use('default')
+        plt.style.use('default')   
 
     fig, axarr = plt.subplots(figsize=(80, 10), dpi= 300)
     plt.title(title,size=40)
