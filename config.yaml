@@ -1,9 +1,9 @@
 seed: 42
 optimize:
   optimizer: Adam
-  lr: 0.001
+  lr: 0.01
 train:
-  epochs: 100
+  epochs: 200
   batch_size: 32
 dataset:
   path: MNIST

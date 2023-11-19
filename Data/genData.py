@@ -6,6 +6,8 @@ import custom_plots as cp
 import Visual_utils as vu
 import pandas as pd
 
+import mplcyberpunk
+
 def genClusterCycle(adj, start, end):
     for i in range(start, end-1):
         adj[i, i+1] = 1     
@@ -140,34 +142,54 @@ def genStimulus2(A, x0, num_samples):
     
     return timeseries
 
-def DrawGraph( G,pos = None, styleDark = False ):
+def DrawGraph( G,pos = None, styleDark = True ):
     
     plt.figure()
-    fig, axarr = plt.subplots(figsize=(20, 10), dpi= 300)
+    fig, axarr = plt.subplots(figsize=(40, 20), dpi= 300)
+
+    print("styleDark", styleDark)
+
+    if(styleDark):
+        plt.style.use("default")
+        fig.set_facecolor("#00000F")
+    else:
+        plt.style.use('default')
 
    
     if(styleDark):
-        node_color = 'skyblue'
-        edge_color1='lightpink'
+        node_color = 'cyan'
+        edge_color1='magenta'
         text_color = 'white'
     else:
         node_color = 'skyblue'
         edge_color1='cyan'
         text_color = 'black'
 
+    fig.patch.set_visible(False)
+    axarr.axis('off')
+
     # create graph from adjacency matrix  
     if pos is None:
         pos = nx.spring_layout(G) # positions for all nodes
         #pos = nx.spectral_layout(G)
-    nx.draw_networkx_edges(G, pos, edge_color=edge_color1, alpha=1.0, width=2.0,connectionstyle="arc3,rad=0.1", ax=axarr)
-    nx.draw_networkx_labels(G, pos, font_size=15, font_color= text_color, font_family='Georgia', font_weight='normal', alpha=None, bbox=None, horizontalalignment='center', verticalalignment='center', ax=axarr)
+    
+    #nx.draw_networkx_nodes(G, pos, node_size=700, node_color=node_color, node_shape='o', alpha=0.5, cmap=None, vmin=None, vmax=None,  ax=axarr, linewidths=40, edgecolors=node_color, label=None, margins=0)
+ 
+    nx.draw_networkx_edges(G, pos, edge_color=edge_color1, alpha=0.6, width=4.0,connectionstyle="arc3,rad=0.1", arrowsize=25, node_size = 2000, ax=axarr)
+    nx.draw_networkx_edges(G, pos, edge_color=edge_color1, alpha=1.0, width=1.0,connectionstyle="arc3,rad=0.1", arrowsize=25, node_size = 2000, ax=axarr)
+    nx.draw_networkx_labels(G, pos, font_size=30, font_color= text_color, font_family='Georgia', font_weight='normal', alpha=None, bbox=None, horizontalalignment='center', verticalalignment='center', ax=axarr)
     
 
-    if(styleDark):
-        plt.style.use('dark_background')
-        fig.set_facecolor("#00000F")
-    else:
-        plt.style.use('default')
+    
+
+    
+
+    plt.axis('off')
+    plt.grid(False)
+
+    plt.show()
+
+    plt.savefig('toprint.png', transparent=True, dpi=fig.dpi)
 
 def genData():  
 
@@ -206,7 +228,7 @@ def genData():
 
     G = nx.DiGraph(adj) 
 
-    DrawGraph( G,pos = pos, styleDark = False )
+    DrawGraph( G,pos = pos, styleDark = True )
 
     x0 = np.zeros(num_nodes, dtype=float)
     x0[10] = 1
@@ -234,7 +256,7 @@ def genData():
     df = pd.DataFrame(timeseries, index = ['Node'+str(i) for i in range(num_nodes)])
     
     #print(df)
-    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = False)
+    cp.plotMatrix(timeseries,'time', 'Node','Timeseries', 'timeseries_plot', styleDark = True)
     return timeseries, adj, pos
     #vu.createImage(pos,x0)
     
